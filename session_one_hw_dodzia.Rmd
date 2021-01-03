@@ -1,0 +1,346 @@
+---
+title: "Session One Notebook"
+author: "Dodzia"
+date: "12.12.2020"
+output: html_notebook
+---
+
+**First Steps**
+
+```{r}
+library('tidyverse')
+ggplot(data = mpg)
+```
+not much, just a grey region, no data, no grids, nothing
+```{r}
+mpg
+```
+234 rows, 11 columns
+```{r}
+?mpg
+```
+drv is the type of drive train, where f = front-wheel drive, r = rear wheel drive, 4 = 4wd
+```{r}
+ggplot(mpg) + geom_point(aes(x=hwy, y = cyl))
+```
+
+```{r}
+ggplot(mpg) + geom_point(aes(x=class, y = drv))
+```
+This graph is not useful as it doesn't provide any meaningful information about the data. There's no trend visible. We are just seeing two qualities that aren't really related in any meaningful way. Moreover, the points are layered on top of one another, we can't see how many cars have the given attributes
+
+**Plots with other datasets**
+```{r}
+iris
+nrow(iris)
+ncol(iris)
+
+```
+there are 5 columns and 150 rows
+the columns represent the species name, sepal length and width, petal length and width for 50 flowers from each of 3 species of iris
+```{r}
+summary(iris)
+```
+Sepal length ranges from 4.300-7.900cm
+Sepal width ranges from 2.000-4.400cm
+Petal length ranges from 1.000-6.900cm
+Petal width ranges from: 0.100-2.500cm
+```{r}
+ggplot(iris) + geom_point(aes(x=Sepal.Width, y = Sepal.Length), colour = 'green')
+```
+
+```{r}
+ggplot(iris) + geom_point(aes(x=Sepal.Width, y = Sepal.Length, colour = Species))
+```
+**remaking plots**
+```{r}
+head(mtcars)
+tail(mtcars)
+```
+```{r}
+mtcars$cyl
+```
+the variable is discrete (clearly only integers). It is also categorical, as the number of cylinders can only take certain values
+```{r}
+ggplot(mtcars) + geom_point(aes(x=disp, y = hp, colour = factor(cyl)))
+```
+**more aesthetics**
+*Size, Transparency, and Shape*
+```{r}
+ggplot(mpg) + geom_point(aes(x=hwy, y = cty, size = displ))
+```
+
+```{r}
+ggplot(iris) + geom_point(aes(x=Sepal.Length, y= Sepal.Width, alpha = Species))
+```
+
+```{r}
+Orange
+ggplot(Orange) + geom_point(aes(x=circumference, y= age, shape = Tree))
+```
+This is not a very legible plot in my opinion
+```{r}
+ggplot(mpg) + geom_point(aes(x=hwy, y = displ), shape = 5)
+```
+
+```{r}
+ggplot(mpg) + geom_point(aes(x=hwy, y = displ), shape = 17)
+```
+*choosing appropriate aesthetics*
+categorical: manufacturer, model, cyl, trans, drv, fl, class
+continuous: displ, cty, hwy
+discrete: year
+```{r}
+ggplot(mpg) + geom_point(aes(x=drv, y = displ, col=displ))
+```
+Doesn't make much sense in this graph, but would be useful in creating sort of heat-maps, or when we use 3 variables, like in the example below we can see that smaller displacement correlates to higher city and highway milage
+```{r}
+ggplot(mpg) + geom_point(aes(x=hwy, y = cty, col=displ))
+```
+
+
+
+```{r}
+ggplot(mpg) + geom_point(aes(x=drv, y = displ, size = displ))
+```
+Not a very legible graph, again could be useful for more variables
+```{r}
+ggplot(mpg) + geom_point(aes(x=drv, y = displ, shape = displ))
+```
+This graph doesn't get create as R doesn't allow mapping a cont variable to shape (rightfully so, enough shapes don't exist)
+```{r}
+ggplot(mpg) + geom_point(aes(x=hwy, y = displ, col = drv))
+```
+seems like an easy way to understand how the categorical data affects other parameters, easy on the eyes
+```{r}
+ggplot(mpg) + geom_point(aes(x=hwy, y = displ, size = drv), col = 'blue')
+```
+illegible graph overall, R throws a warning. Bigger dots may obscure the smaller dots and lead us to draw erroneous conclusions
+```{r}
+ggplot(mpg) + geom_point(aes(x=hwy, y = displ, shape=drv))
+```
+It works, but again isn't the most legible
+
+Q3.
+```{r}
+ggplot(mpg) + geom_point(aes(x=hwy, y = displ, size=class))
+```
+Ewww no. Bad idea. Ewww. It's uglee but also illegible. Some big dots might hide small dots. I'll move on to the next task, as I don't want to look at it any more
+
+Q4
+my top picks for categorical: color. Shape works as well
+my top picks for continuous: color works well. Size as well
+
+Q5
+colour, size, transparency
+
+**Common Problems**
+```{r}
+ggplot(mpg) + geom_point(aes(x=cty, y=displ, shape = class))
+```
+There's no shape for suv... R ran out of shapes?
+
+Q2
+```{r}
+ggplot(iris) +
+  geom_point(x = Sepal.Length, y = Petal.Length)
+
+```
+yes, we didn't include the 'aes'
+
+```{r}
+ggplot(iris) +
+  geom_point(aes(x = Sepal.Length, y = Petal.Length))
+```
+Now everything works fine
+
+Q3
+```{r}
+airquality
+```
+
+```{r}
+ggplot(airquality) +
+  geom_point(aes(x = Wind, y = Temp, col = Month))
+```
+It maps months as a continuous variable, where it should be discrete. Using factor() will yield better results
+
+Q4
+blue is passed as the data. If we move it outside brackets it will display as blue
+
+Q5
+```{r}
+ggplot(mpg) +
+  geom_point(aes(x = displ, y = hwy, colour = factor(year), shape = factor(year)))
+```
+we get a very colourful graph that doesn't give us more data than using just one aesthetic. It could, however, make it more legible when printed in greyscale (eg in education) or for colorblind people
+
+**FACETTING**
+**Basic facetting**
+```{r}
+ggplot(mpg) +
+  geom_point(aes(x = displ, y = hwy, col = class), show.legend = TRUE) + facet_wrap(~cty, nrow = 4)
+```
+R does a facet for each value of the cont variable present in the dataset, R treats it as a discrete variable
+```{r}
+ggplot(mpg) +
+  geom_point(aes(x = displ, y = hwy, col = class), show.legend = TRUE) + facet_grid(drv~cyl)
+```
+there is no data for the given combinations of drv and cyl, so R displays empty cells
+
+```{r}
+ggplot(mpg)+geom_point(aes(x=drv, y = cyl))
+```
+this plot confirms my deduction from the faceted plot
+
+```{r}
+ggplot(mpg) +
+  geom_point(aes(x = displ, y = hwy)) +
+  facet_grid(drv ~ .)
+
+ggplot(mpg) +
+  geom_point(aes(x = displ, y = hwy)) +
+  facet_grid(. ~ cyl)
+```
+the '.' substitutes a variable ir says we obly want to facet in one direction. So the first plot has 3 cells, corresponding to the possible values of drv (horizontal)
+And the second is 4 cells corresponding to the possible values of the 'cyl' column, vertically
+
+Q4
+```{r}
+ggplot(mpg) +
+  geom_point(aes(x = displ, y = hwy)) +
+  facet_wrap(~ class, nrow = 2)
+
+ggplot(mpg) +
+  geom_point(aes(x = displ, y = hwy, col = class))
+```
+
+Advantages of faceting: 
+lets look at a category in seperation to others, easier comparison, color=blindness-friendly. 
+Colours might get illegible once we have many data points, especially if we are dealing with date with big variance. 
+No need to keep in mind which colour corresponds to which value
+
+Disadvantages of faceting: 
+smaller plots, can be harder to read for people with sight problems, 
+if we have a lot of cells it may be difficult to see the bigger picture, causing us to miss out of insights
+
+Q5
+```{r}
+?facet_wrap
+```
+nrow specifies the number of rows the cells are displayed in
+ncol - no of columns
+
+scale control the scaling of the x- and y- axis
+
+The facetting variables in facet_grid aready tell R what the number of columns and rows is, so we cannot specify manually
+
+Q6
+Lets experiment
+```{r}
+ggplot(mpg) +
+  geom_point(aes(x = displ, y = hwy)) +
+  facet_grid(drv ~ cyl)
+
+ggplot(mpg) +
+  geom_point(aes(x = displ, y = hwy)) +
+  facet_grid(cyl~drv)
+```
+It is harder to read the labels that are rotated, so we do not want to make the job more difficult by putting more of the words there
+
+**Combining Facets with Aesthetics**
+Q1
+
+```{r}
+ggplot(iris) + geom_point(aes(x=Sepal.Length, y = Sepal.Width), colour = 'blue') + facet_wrap(~Species)
+```
+
+Q2
+```{r}
+ggplot(iris) + geom_point(aes(x=Sepal.Length, y = Sepal.Width, colour = Species), show.legend = FALSE) + facet_wrap(~Species)
+```
+
+Q3
+```{r}
+ggplot(mpg) + geom_point(aes(x=hwy, y = cty, size = displ, col = class)) + facet_grid(drv~cyl)
+```
+
+**Going Beyond**
+**Labelling**
+Q1
+```{r}
+ggplot(mpg) +
+  geom_point(aes(x = displ, y = hwy, colour = class)) +
+  labs(x = "Engine Displacment (litres)", y = "Highway Milage (miles/gallon)",
+       colour = "Car Type",
+       title = "A scatter plot of engine displacment vs highway milage",
+       subtitle = "Coloured by car type",
+       caption = "Source: EPA (http://fueleconomy.gov)")
+```
+labs (I assume short for labels) allows us to label the x- and y-axes, the legend, add a title, subtitle and caption
+Q2
+```{r}
+ggplot(mtcars) + 
+  geom_point(aes(x=disp, y= hp, col= factor(cyl))) +
+  labs(title = 'A scatter plot of Displacement vs Gross horsepower', subtitle = 'coloured by number of cylinders', x = 'Displacement (cu. in.)', y = 'Gross horsepower', color = 'Number of Cylinders', caption = 'Source: Henderson and Velleman (1981)')
+```
+Q3
+```{r}
+ggplot(iris) + geom_point(aes(x=Sepal.Length, y = Sepal.Width, colour = Species)) +
+  labs(title = 'Plot of Sepal Width vs Sepal Length of Iris', subtitle = 'coloured by species', x='Sepal length [cm]', y = 'Sepal Width [cm]', caption= 'Source: Fisher, R. A. (1936) \n The use of multiple measurements in taxonomic problems.\n Annals of Eugenics, 7, Part II, 179–188.' )
+```
+**Diamonds and Overplotting**
+Q1
+```{r}
+diamonds
+```
+
+```{r}
+ggplot(diamonds) + geom_point(aes(y=price, x=carat))
+```
+There are many many data points which make the plot difficult to read
+attempt 1:
+```{r}
+ggplot(diamonds) + geom_point(aes(y=price, x=carat, col = cut)) + facet_wrap(~cut)
+```
+This didn't appear to help much
+attempt 2:
+```{r}
+ggplot(diamonds) + geom_point(aes(y=price, x=carat, col = cut), alpha = 0.1)
+```
+We can now see that the points have higher density in some places. On third thought, we don't need to know the cut. The trend doesn't seem o change much based on it
+Attempt 3:
+```{r}
+ggplot(diamonds) + geom_point(aes(x=carat, y=price), col='purple', alpha = 0.1)
+```
+This plot offers more legibility and naturally makes outliers less noticable
+
+**Explanatory and Response variables**
+Q1 
+the independant variable goes on the x-axis, the dependant on y-axis
+Q2
+cool stuff
+
+**Posiitnal Arguments**
+```{r}
+ggplot(mpg) +
+  geom_point(aes(x = displ, y = hwy, colour = factor(class)))
+```
+Q1
+```{r}
+ggplot(mpg) +
+  geom_point(aes(displ, hwy, colour = factor(class)))
+```
+Yup. Still works
+Q2
+```{r}
+ggplot(mpg) +
+  geom_point(aes(x = displ, y = hwy, factor(class)))
+```
+Nope. Not at all. Nothing works. R is confused. Are we mapping colour to class? Shape? transparency? 
+Q3
+```{r}
+ggplot(mpg) +
+  geom_point(aes(y = hwy, colour = factor(class), x = displ))
+```
+Yup!

@@ -1,0 +1,61 @@
+---
+title: "Session Two Notebook"
+author: "Dodzia"
+date: "02.01.2021"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+```
+**R as a Calculator 1** 
+Q1
+```{r}
+integers <- seq(0, 100)
+```
+Q2
+```{r}
+squares <- integers^2
+```
+
+Q3
+```{r}
+squares_df <- tibble(integers, squares)
+```
+
+Q4
+```{r}
+ggplot(squares_df) + geom_point(aes(x = integers, y = squares))
+```
+
+**R as a calculator 2**
+Q1
+```{r}
+x <- seq(-6, 6, length.out = 1000)
+```
+Q2
+```{r}
+y <- sin(x)
+```
+Q3
+```{r}
+sines_df <- tibble(x,y)
+ggplot(sines_df) + geom_line(aes(x, y))
+```
+Q4
+```{r}
+ggplot(sines_df) + geom_line(aes(x, y), col = 'purple', linetype = 2, size = 1.5)
+```
+
+**Specifying Parameters by Position**
+\n
+Q1
+```{r}
+ggplot(data = mpg) +
+  geom_point(aes(displ, hwy, colour = factor(class)))
+```
+mapping, x, y
+
+**Reading CSVs \n
+The ‘People’ Dataset**
+
