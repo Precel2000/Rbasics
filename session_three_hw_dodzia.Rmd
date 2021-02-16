@@ -1,0 +1,367 @@
+---
+title: "Session Three Notebook"
+author: "Dodzia"
+date: "06.01.2021"
+output: html_notebook
+---
+ 
+```{r}
+library(tidyverse)
+```
+
+**Back to the Basics**
+
+*R for statistics*
+
+Extract the displ column from the mpg dataset and assign it to the object x
+```{r}
+x <- mpg$displ
+mean(x)
+median(x)
+range(x)
+quantile(x)[2]
+quantile(x)[4]
+IQR(x)
+var(x)
+sd(x)
+```
+**Missing Values**
+
+Q1
+```{r}
+5 + NA
+```
+Q2
+```{r}
+5/NA
+5*NA
+5%%NA
+5-NA
+5^NA
+```
+All NAs
+
+Q3
+```{r}
+median(c(2, 6, 3, 4, NA), na.rm = TRUE)
+```
+Q4
+```{r}
+NA ^ 0
+NA | TRUE
+NA & FALSE
+0^0
+
+NA * 0
+0 * NA
+```
+Any number^0 is 1, so it doesn't matter what NA is (possible problem: 0. R assumes 0^0 is 1, but some say it should be undef instead). The bools on the right hand sides dictate the value, so it doesn't matter what NA actually is.
+
+R gives NA as a result of an operation whose answer depends on what the NA actually is. If R doesn't need to know what NA is, then it gives an answer
+
+**Arithmetic with Boolean Values**
+```{r}
+5+TRUE
+5+FALSE
+```
+It seems that TRUE ==1 and FALSE == 0
+```{r}
+sum(TRUE)
+sum(FALSE)
+mean(TRUE)
+mean(FALSE)
+```
+The sum  of a logical vector seems to give its numeric value, as does the mean (the mean of a single value is the value itself)
+```{r}
+FALSE < TRUE
+TRUE < FALSE
+y <- c(FALSE, TRUE, FALSE)
+sort(y)
+```
+FALSE is indeed smaller than TRUE. 
+If we use arrange() or sort(), we get FALSE values before TRUE
+
+**Comparisons and Boolean Operators**
+
+My guesses:    
+TRUE
+FALSE
+TRUE
+
+Reality:
+```{r}
+((4 > 3) & (7 == 6)) | (5 <= 8)
+
+(sqrt(2) ^ 2 == 2) | !near(sqrt(2) ^ 2, 2)
+
+FALSE & !FALSE | TRUE
+```
+
+**The dpylr verbs**
+
+*Filter*
+
+Q1. How many automatic cars by Audi are in the mpg dataset?
+```{r}
+filter(mpg, manufacturer == 'audi', trans %in% c('auto(l5)', 'auto(av)', 'auto(s6)'))
+```
+11
+
+Q2. Who makes the only two cars with a highway mileage above 41 miles/gallon?
+```{r}
+filter(mpg, hwy>41)
+```
+volkswagen
+
+Q3. Are there any flowers in the iris dataset with petals that are wider than they are long?
+```{r}
+filter(iris, Sepal.Width > Sepal.Length)
+```
+nope
+
+Q4. What is the carat of the highest priced diamond in the the diamond dataset?
+```{r}
+filter(diamonds, price == max(price))
+```
+2.29
+
+Q5. For each year in the mpg dataset, which car has the smallest engine size? 
+```{r}
+temp <- group_by(mpg, year)
+filter(temp, displ == min(displ))
+```
+Q6
+Select all flowers from the iris dataset where either the petal length is greater than 6.4 or the petal width is greater than 2.4
+```{r}
+filter(iris, Petal.Length > 6.4 | Petal.Width >2.4)
+```
+Q7
+Which observations in the Ozone dataset are missing a reading for Ozone?
+```{r}
+filter(airquality, is.na(Ozone))
+```
+...these
+
+*Arrange*
+
+Now, using arrange(), find the car in the mpg dataset with the best city mileage. What about the worst?
+```{r}
+arrange(mpg, desc(cty))
+arrange(mpg, cty)
+```
+best: volkswagen	new beetle and 
+volkswagen	jetta
+worst: dodge	dakota pickup 4wd	and
+dodge	durango 4wd
+
+Q2. Order the iris dataset by the product of the petal length and width
+```{r}
+arrange(iris, Petal.Length * Petal.Width)
+```
+
+Q3. Look at the column types when you print mpg and diamonds to the console. What order do you get when you arrange mpg by class and what order do you get when you arrange diamonds by cut. Why is this?
+```{r}
+mpg
+arrange(mpg, class)
+diamonds
+arrange(diamonds, cut)
+```
+Column order doesn't change. class is ordered alphabetically. Cut is ordered by an order scecified when creating the df.
+
+Q4. Order the cars in mpg by the difference between their city and highway mileage (biggest difference first)
+```{r}
+arrange(mpg, desc(abs(cty-hwy)))
+```
+*Select*
+
+Q1. Re-order the columns of the iris dataset so that Species is first.
+```{r}
+select(iris, Species, everything(iris))
+```
+Q2. Rename the displ column in mpg to eng_size
+```{r}
+rename(mpg, eng_size = displ)
+```
+
+Select all columns apart from price in the diamonds dataset
+```{r}
+select(diamonds, -price)
+```
+
+```{r}
+mpg
+select(mpg, 1, 2, 4, 11)
+```
+It selects the 1st, 2nd, 4th and 11th column of the mpg dataset
+
+*Mutate*
+Using the mpg dataset, create a new column called cty_km_l which measures the city mileage in kilometres per litre (Hint: 1 mile ~ 1.6 km, 1 gallon ~ 3.8 litres)
+```{r}
+mutate(mpg, cty_km_l = cty*(1.6/3.8))
+```
+Create column called max_dimension for the diamonds dataset which contains the maximum of the values in the columns x, y, z
+```{r}
+mutate(diamonds, max_dim=max(x,y,z))
+```
+
+Read the help page for transmutate()
+```{r}
+??transmutate
+```
+mutate() adds new variables and preserves existing ones; transmute() adds new variables and drops existing ones. 
+
+The mpg dataset currently has trans stored as a character. Convert this to a factor using mutate() and the factor() function
+```{r}
+mutate(mpg, trans = factor(trans))
+```
+Create a column called is_automatic which is TRUE if and only if a given car has automatic transmission. Don’t forget to use == for comparison
+```{r}
+mutate(mpg, is_automatic = trans == 'auto(l5)')
+```
+
+mutate can be combined with group_by to change the scope of aggregate functions. Use this to create a new variable in the mpg dataset called best_in_class which is TRUE if and only if the highway mileage is the highest out of all other cars in that class.
+```{r}
+temp <- group_by(mpg, class)
+mutate(temp, best_in_class = (hwy == max(hwy)))
+
+```
+Create a new column in the diamonds dataset called expensive which is TRUE if and only if the price of the diamond is above the upper quartile of all prices
+```{r}
+mutate(diamonds, expensive = price>quantile(price)[3])
+```
+*Summarise*
+What is the variance of the city mileage and highway mileage column in the mpg dataset?
+```{r}
+summarise(mpg, var(cty), var(hwy))
+```
+How many cars are there of each class in the mpg dataset? Group by class and then use the n() function to count
+```{r}
+temp <- group_by(mpg, class)
+summarise(temp, number_of_cars = n())
+```
+
+What are the median values for each of the 4 numeric columns in the iris dataset?
+```{r}
+summarise(iris,
+          Petal.Length.Median = median(Petal.Length),
+          Petal.Width.Median = median(Petal.Width),
+          Sepal.Length.Median = median(Sepal.Length),
+          Sepal.Width.Median = median(Sepal.Width))
+```
+
+What is the price of the least expensive diamond of each cut?
+```{r}
+diamonds %>% group_by(cut) %>% summarise(MinPrize = min(price))
+```
+
+What is the mean ozone for each month in the airquality dataset? Make sure you ignore NAs
+```{r}
+airquality %>% group_by(Month) %>% summarise(MeanOzone = mean(Ozone, na.rm=TRUE))
+```
+
+For each cut and colour in the diamonds dataset, what is the range (diff(range(...))) of the carats?
+```{r}
+diamonds %>% group_by(cut, color) %>% summarise(caratRange = diff(range(carat)))
+```
+
+**Pipelines**
+After removing all 2-seater cars, 
+calculate the average of the city and highway mileage for each car and 
+add this as a new column called efficiency. 
+Group by manufacturer and the calculate the maximum efficiency for each group. 
+Arrange these in descending order of efficiency
+```{r}
+mpg %>%
+  filter( class!="2seater") %>% 
+  mutate(efficiency = (cty + hwy) / 2) %>%
+  group_by(manufacturer) %>%
+  summarize(maxEfficiency = max(efficiency)) %>%
+  arrange(desc(maxEfficiency))
+```
+
+Create a new column in the iris dataset called Petal.Area which is the product of the petal length and width. Create a similar column called Sepal.Area. Pipe this data frame into a call to ggplot to create a plot of these two variables, coloured by Species. Add a line of best fit for each species
+```{r}
+iris %>%
+  mutate(Petal.Area = Petal.Length * Petal.Width, Sepal.Area = Sepal.Length * Sepal.Width) %>%
+  ggplot(aes(Petal.Area, Sepal.Area, col = Species)) +
+  geom_point() +
+  geom_smooth(method = 'lm')
+```
+
+Formulate your own question about the diamonds dataset and use a pipeline to answer it
+How does the volume and color of a diamond correlate with its price per carat
+```{r}
+diamonds %>%
+  mutate(Volume = 4/3 * pi * x * y * z, PricePerCarat = price/carat) %>%
+  ggplot(aes(Volume, PricePerCarat, col = color)) +
+  geom_point()
+```
+We notice an outlier which makes out graph much less readable, so less remove it
+```{r}
+diamonds %>%
+  mutate(Volume = 4/3 * pi * x * y * z, PricePerCarat = price/carat) %>%
+  filter(Volume>100) %>%
+  filter(Volume<1700) %>%
+  ggplot(aes(Volume, PricePerCarat, col = color)) +
+  geom_point(alpha = 0.2, size = 0.7) +
+  geom_smooth()
+```
+As expected, colour `D` is the most valuable and `J` the least (per carat). It appears the most valuable are diamonds with volume around `170mm^3` of colour `D`. The influence of volume on price per carat seems also most significant for the better-estimmed colours, around `70-100mm^3` and `130-160mm^3`. Increase in volume begins to negatively impact price per carat around `330mm^3` for the higher-valued colours, but colour `J` maintains a weak positive relationship
+
+**GOING BEYOND**
+
+**Ranking**
+
+1. Read the help page for ranking. In particular try to understand the difference between row_number(), min_rank(), dense_rank(). The others are of less use
+```{r}
+?ranking
+x <- c(15, 11, 13, 12, 12, NA)
+x
+row_number(x)
+min_rank(desc(x))
+min_rank(x)
+dense_rank(x)
+```
+2. For each date in the airquality dataset, rank observations (think about which ranking method is most appropriate) by the intensity of solar radiation compared to other observations in the same month.
+Select only observations which have the 2nd highest solar radiation for each month
+```{r}
+airquality %>% 
+  group_by(Month) %>% 
+  mutate(solar_rank = dense_rank(desc(Solar.R))) %>%
+  filter(solar_rank == 2)
+
+```
+
+3. For each year in the mpg dataset, rank the cars by city mileage so that the lowest mileage is ranked first. Select the cars that are ranked number one for each year
+```{r}
+mpg %>% 
+  group_by(year) %>%
+  mutate(rank = dense_rank(desc(cty))) %>%
+  filter(rank == 1) %>%
+  select(-rank)
+```
+
+**Un-grouping**
+Try running the following code. What error message do you get? Where are things going wrong?
+```{r}
+as_tibble(Titanic) %>% 
+     group_by(Class, Age) %>% 
+     summarise(count = sum(n)) %>% 
+     mutate(Class = reorder(Class, count))
+```
+I get no error, but `mutate` doesn't change anything
+
+Read the help page for ungroup. How might you rectify this issue?
+```{r}
+?ungroup
+```
+
+```{r}
+as_tibble(Titanic) %>%
+  group_by(Class, Age) %>% 
+  summarise(count = sum(n)) %>% 
+  ungroup() %>%
+  mutate(Class = reorder(Class, count))
+```
+
+
