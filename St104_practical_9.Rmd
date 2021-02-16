@@ -1,0 +1,263 @@
+---
+title: "ST104 catchup lab 9"
+output: html_notebook
+---
+
+ **Anemia treatment study**
+In this exercise, we look at one of the most common ways that the regression
+fallacy can confuse results of an observational study. Suppose a company wants
+to promote a nutritional supplement that they believe can increase red blood cell
+count and therefore combat anemia. They recruit patients with low red blood cell
+count, instruct them to eat the supplement for two weeks, and then measure their
+red blood cell count again. The supplement is deemed to be a success if their red
+blood cell count has increased on average (by more than would be predicted by
+chance).
+For this exercise you will first simulate data representing the whole population.
+Then you will select the group the study recruited their patients from. Finally, you
+will compare what can be observed from the whole population with what can be
+observed on the selected population and draw conclusions.
+
+Suppose the following facts:
+ Each person has a “true blood cell count”, which is normally distributed and
+does not change over time. For men this distribution has mean 150 and SD
+6. For women this distribution has mean 133 and SD 5. All measurements
+have the unit grams per litre, or g/L.
+ Each measurement of red blood cell count adds a chance variation, which is
+independent of the red blood cell count and is normally distributed with mean
+0 and SD 2. This accounts for both the difficulty in precisely determining the
+mass of red blood cells in a sample, and also for the fact that one sample of
+blood from a patient may not contain the average red blood cell count for
+that patient.
+ In this study, each person’s red blood cell count is measured just twice, once
+before and once after the supplement course.
+ Male patients are judged to have anemia if their red blood cell count is below
+130 g/L. Female patients are judged to have anemia if their red blood cell
+count is below 120g/L. If a patient does not have anemia then they are
+excluded from the study.
+ The supplement has no effect. That is, the difference between the first and
+second measurements is due only to chance variation, though the people
+carrying out the study don’t know that.
+
+1. Write a function rbccF() that inputs a number n and outputs an array with n
+rows and 2 columns, representing the simulated measurements of red blood
+cell count on n female patients. 
+
+
+
+```{r}
+rbccF <- function(n){
+  #1st measurement
+  m_1 <- rnorm(n, 133, 5)+ rnorm(n,0,2)
+  #2nd measurement
+  m_2 <- rnorm(n, 133, 5)+ rnorm(n,0,2)
+  m <-cbind(m_1, m_2)
+  return(m)
+}
+```
+Write a function rbccM() that inputs a
+number n and outputs an array with n rows and 2 columns, representing the
+simulated measurements of red blood cell count on n male patients. 
+```{r}
+rbccM <- function(n){
+  m_1 <- rnorm(n, 150, 6)+ rnorm(n,0,2)
+  m_2 <- rnorm(n, 150, 6)+ rnorm(n,0,2)
+  m <-cbind(m_1, m_2)
+  return(m)
+}
+```
+Combine these functions to create a function rbccT() that inputs a number n
+and outputs an array with 2n rows and 2 columns, representing the simulated
+measurements of red blood cell count on n female patients and n male patients, for 2n patients in total. In each case the first column should represent
+the first test for red blood cell count, and the second column should represent
+the second test for red blood cell count
+```{r}
+rbccT <- function(n){
+  male <- rbccM(n)
+  female <- rbccF(n)
+  return(rbind(female, male))
+}
+```
+
+Let B be the output of rbccT(1000).
+Make a scatterplot of first and the second red blood cell count measurements
+in B, with second measurements on the vertical axis. The plot should distinguish between male and female patients by e.g., colour, size or shape of the
+points. You may find it helpful here to remember that the points() command
+can be used to add new points into an existing plot.
+```{r}
+B <- rbccT(1000)
+```
+Make a scatterplot of first and the second red blood cell count measurements
+in B, with second measurements on the vertical axis. The plot should distinguish between male and female patients by e.g., colour, size or shape of the points.
+
+```{r}
+plot(B[1:1000,1], B[1:1000,2], xlab="first measurement", ylab="second measurement", col="purple", xlim=c(min(B[,1]), max(B[,1])), ylim=c(min(B[,2]), max(B[,2])))
+points(B[1001:2000,1], B[1001:2000,2], col="black")
+# Add a legend to the graph
+legend("bottomright", c("Male","Female"), pch=1, col = c("black","purple"),
+inset = 0.02)
+```
+Note that some of these measurements in the second column of B will never
+actually occur, because the associated individuals would have been excluded
+from the study once they were found to not be anemic. 
+Compute B1, the subarray of B of those subjects judged to have anemia, and so included in
+the study. 
+You could do this by directly removing both male and female
+patients from B, or you could split B into two arrays, one with only male
+patients and the other with only female, then remove non-anemic patients
+from each of these new arrays before joining them together. Either way, you
+may find it helpful to recall the syntax for subsetting arrays (e.g., define A<-
+array(c(1 : 12), dim = c(3, 4)) and extract rows by A[A[, 2] < 6, ].) 
+
+```{r}
+#select eligible females
+B1_F <- B[1:1000,][B[1:1000,1]<120,]
+#select eligible males
+B1_M <- B[1001:2000,][B[1001:2000,1]<130,]
+#bind them together
+B1 <- rbind(B1_F,B1_M)
+```
+By usingthe points() command, or by some other method, change the colour of the
+points corresponding to subjects included in the study to red.
+```{r}
+plot(B[1:1000,1], B[1:1000,2], xlab="first measurement", ylab="second measurement", col="purple", xlim=c(min(B[,1]), max(B[,1])), ylim=c(min(B[,2]), max(B[,2])))
+points(B[1001:2000,1], B[1001:2000,2], col="black")
+points(B1[,1], B1[,2], col="red")
+# Add a legend to the graph
+legend("bottomright", c("Male","Female", "Anemic"), pch=1, col = c("black","purple", "red"),
+inset = 0.02)
+```
+3. What is the correlation between the first and second measurements for all
+rows of B (so both anemic and non-anemic patients)? Try repeating the
+simulation many times, each time generating a new B and finding the correlation. Can you give an estimate of how much an estimate of correlation for a dataset like this would typically be off by, purely by chance?
+There are several reasonable answers to the latter. You just need to give one
+option. Think of a measure of spread.
+```{r}
+cor(B[,1],B[,2])
+B <- rbccT(10000)
+cor(B[,1],B[,2])
+B <- rbccT(10000)
+cor(B[,1],B[,2])
+B <- rbccT(10000)
+cor(B[,1],B[,2])
+B <- rbccT(10000)
+cor(B[,1],B[,2])
+cor(B[,1],B[,2])
+B <- rbccT(10000)
+cor(B[,1],B[,2])
+B <- rbccT(10000)
+cor(B[,1],B[,2])
+B <- rbccT(10000)
+cor(B[,1],B[,2])
+B <- rbccT(10000)
+cor(B[,1],B[,2])
+```
+It would be off by about 33% COME BACK TO THIS
+
+5. Use the lm() function to compute the regression line for predicting second
+measurements from first measurements, based on the complete set of measurements B.
+```{r}
+lm(B[,1]~B[,2])
+lm(B1[,1]~B1[,2])
+```
+Put the line into the scatterplot. Repeat this for just the subjects included in the study, B1, plotting the new line in red. 
+```{r}
+plot(B[1:1000,1], B[1:1000,2], xlab="first measurement", ylab="second measurement", col="purple", xlim=c(min(B[,1]), max(B[,1])), ylim=c(min(B[,2]), max(B[,2])))
+points(B[1001:2000,1], B[1001:2000,2], col="black")
+points(B1[,1], B1[,2], col="red")
+abline(46.2743, 0.6739)
+abline(51.1323,0.4956, col="red")
+```
+Obviously, your results will depend on the simulated outputs. Draw three scatterplots and the
+regression lines for the whole and the restricted data sets as above, each time
+using a different pair of arrays B and B1.
+```{r}
+B <- rbccT(1000)
+#select eligible females
+B1_F <- B[1:1000,][B[1:1000,1]<120,]
+#select eligible males
+B1_M <- B[1001:2000,][B[1001:2000,1]<130,]
+#bind them together
+B1 <- rbind(B1_F,B1_M)
+plot(B[1:1000,1], B[1:1000,2], xlab="first measurement", ylab="second measurement", col="purple", xlim=c(min(B[,1]), max(B[,1])), ylim=c(min(B[,2]), max(B[,2])))
+points(B[1001:2000,1], B[1001:2000,2], col="black")
+points(B1[,1], B1[,2], col="red")
+abline(46.2743, 0.6739)
+abline(51.1323,0.4956, col="red")
+```
+```{r}
+B <- rbccT(1000)
+#select eligible females
+B1_F <- B[1:1000,][B[1:1000,1]<120,]
+#select eligible males
+B1_M <- B[1001:2000,][B[1001:2000,1]<130,]
+#bind them together
+B1 <- rbind(B1_F,B1_M)
+plot(B[1:1000,1], B[1:1000,2], xlab="first measurement", ylab="second measurement", col="purple", xlim=c(min(B[,1]), max(B[,1])), ylim=c(min(B[,2]), max(B[,2])))
+points(B[1001:2000,1], B[1001:2000,2], col="black")
+points(B1[,1], B1[,2], col="red")
+abline(46.2743, 0.6739)
+abline(51.1323,0.4956, col="red")
+```
+```{r}
+B <- rbccT(1000)
+#select eligible females
+B1_F <- B[1:1000,][B[1:1000,1]<120,]
+#select eligible males
+B1_M <- B[1001:2000,][B[1001:2000,1]<130,]
+#bind them together
+B1 <- rbind(B1_F,B1_M)
+plot(B[1:1000,1], B[1:1000,2], xlab="first measurement", ylab="second measurement", col="purple", xlim=c(min(B[,1]), max(B[,1])), ylim=c(min(B[,2]), max(B[,2])))
+points(B[1001:2000,1], B[1001:2000,2], col="black")
+points(B1[,1], B1[,2], col="red")
+abline(46.2743, 0.6739)
+abline(51.1323,0.4956, col="red")
+```
+What is the mean of the differences between the first and second measurements in B? In B1? 
+```{r}
+abs(sum(B[,1])/nrow(B)-sum(B[,2])/nrow(B))
+abs(sum(B1[,1])/nrow(B1)-sum(B1[,2])/nrow(B1))
+```
+Again simulate many alternative versions of these datasets to gauge whether the mean of the differences could be purely due to chance.
+```{r}
+B_diff <- vector()
+for (i in 1:25) {
+  B <- rbccT(1000)
+  B_diff <- c(B_diff,abs(sum(B[,1])/nrow(B)-sum(B[,2])/nrow(B)))
+  }
+print(B_diff)
+```
+```{r}
+B1_diff <- vector()
+for (i in 1:25){
+  B <- rbccT(1000)
+  #select eligible females
+  B1_F <- B[1:1000,][B[1:1000,1]<120,]
+  #select eligible males
+  B1_M <- B[1001:2000,][B[1001:2000,1]<130,]
+  #bind them together
+  B1 <- rbind(B1_F,B1_M)
+  B1_diff <-c(B1_diff, abs(sum(B1[,1])/nrow(B1)-sum(B1[,2])/nrow(B1)))
+}
+print(B1_diff)
+```
+The results don't seem to be purely due to chance. The differences between B1 results are much much bigger than the ones for B group
+
+
+Consider the first twenty values for the mean of the differences between the first and second measurements of B. Consider the first twenty values for the mean of the differences between the first and second measurements of B1.
+Explain the results in terms of the regression fallacy.
+```{r}
+B <- rbccT(10000)
+  
+#select eligible females
+B1_F <- B[1:10000,][B[1:10000,1]<120,]
+#select eligible males
+B1_M <- B[1001:20000,][B[1001:20000,1]<130,]
+#bind them together
+B1 <- rbind(B1_F,B1_M)
+  
+abs(sum(B[1:50,1])-sum(B[1:50,2]))/50
+abs(sum(B1[1:50,1])-sum(B1[1:50,2]))/50
+```
+The results from B1 are exceptionally low so it makes sense that repeating a trail (with tratment or without) yields a result closer to the mean and so with greater distance. Someone might incorrectly conclude that the treament helped whereas in reality it was the first measurement that was an outlier of sorts
+
+

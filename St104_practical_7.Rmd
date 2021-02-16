@@ -1,0 +1,160 @@
+---
+title: "ST104 lab"
+output: html_notebook
+---
+
+The function betapdf below is the pdf for the beta distribution with parameters
+α, β ∈ Z+.
+
+```{r}
+betapdf <- function (x,alpha,beta){
+if (x<0){return("Invalid input")}
+if (x>1){return("Invalid input")}
+if (alpha*beta%%1!=0){return("Invalid input")}
+a <-(((x)^(alpha-1))*((1-x)^(beta-1)))
+b <-((factorial(alpha-1)*factorial(beta-1))/(factorial(alpha+beta-1)))
+d <- a/b
+return (d)}
+```
+
+plot it for 
+```{r}
+x <- seq(from=0, to=1, by=0.01 )
+```
+
+(a) α = β = 1
+```{r}
+y <- sapply(x, betapdf, alpha=1, beta=1)
+plot(x,y)
+```
+
+(b) α = β = 2
+```{r}
+y <- sapply(x, betapdf, alpha=2, beta=2)
+plot(x,y)
+```
+
+(c) α = 2, β = 5
+```{r}
+y <- sapply(x, betapdf, alpha=2, beta=5)
+plot(x,y)
+```
+The function uniform2d below samples 2n values from the U[0, 1] distribution and
+arranges them in n pairs
+
+```{r}
+uniform2d <- function(n){
+a <- runif(n,0,1)
+b <- runif(n,0,1)
+d <- rbind(a,b)
+return (d)}
+```
+
+(a) Plot the locations of 10,000 two-dimensional co-ordinates where the x-values and
+y-values are both samples from the U[0, 1] distribution.
+```{r}
+# bad method
+plot(c(uniform2d(100)))
+```
+
+(b) Modify uniform2d so it generates two-dimensional co-ordinates where the xvalues are samples from 
+```{r}
+# better method
+m <- uniform2d(10000)
+plot(m[1,],m[2,])
+```
+b) U[0, 1] and the y-values are samples from U[0, M] for
+some positive constant M.
+```{r}
+uniform2d <- function(n, M){
+  if (M <= 0){return("Invalid input: M should be positive")}
+  a <- runif(n,0,1)
+  b <- runif(n,0,M)
+  d <- rbind(a,b)
+  return (d)}
+```
+
+```{r}
+m <- uniform2d(10000, 5)
+plot(m[1,],m[2,])
+```
+
+The beta distribution has a finite support, that is, it is only non-zero over a finite interval.
+The central idea of the rejection sampling algorithm when sampling from a distribution
+with a finite interval is to draw a rectangle around the pdf of that distribution. We then
+sample uniformly from the rectangle and reject any co-ordinates that lie inside the rectangle
+but do not lie under the curve.
+
+We can use the uniform2d function above to uniformly sample points from the rectangle.
+
+First, however, we need to determine the height of the rectangle in question.
+the Beta(2,5) distribution's pdf is
+f(x; 2, 5) = = 30x(1 − x)^4
+
+By using optimize find the maximum value of f(x; 2, 5) for x ∈ (0, 1) and thereby show it is in the interval [2, 3].
+
+Let's plot the graph first
+```{r}
+y <- 30*x*((1-x)**4)
+plot(x, y)
+```
+
+```{r}
+f <- function(y) 30*y*((1-y)**4)
+optimize(f,lower=0,upper=1, maximum=TRUE)
+```
+or
+```{r}
+Maximum <- optimize(betapdf, alpha=2, beta=5, c(0,1), maximum = TRUE)
+Maximum
+```
+
+The maximum is around x=0.2, as expected
+
+
+We now require a function that rejects unsuitable samples from the rectangle [0, 1]×[0, M] (produced by uniform2d).
+This will be any co-ordinate (xi, yi) found from the modified uniform2d function for which
+yi > f(xi; 2, 5).
+```{r}
+rejection <- function(A){
+  # Code to assign the number of sample values to object n
+  n <- ncol(A)
+  reject <- NULL
+  for (i in 1:n){
+    x<-A[1,i]
+    # Code to assign the value sampled from [0,M] to object y
+    y <- A[2,i]
+    if (y > betapdf(x,2,5)){
+    reject <- c(reject,i)
+    }
+  }
+  # Code to produce an output from the function
+    # returns the accepted values
+    return(A[,-reject])
+}
+```
+
+(b) Uniformly sample 50,000 sample values from the rectangle [0, 1]×[0, M]. Use the
+rejection function to reject samples that do not lie under the curve f(x; 2, 5).
+Plot the points that have not been rejected in a scatter diagram. What do you
+notice?
+```{r}
+A <- rejection(uniform2d(50000, 2.46))
+plot(A[1,],A[2,],xlab = "Support of U[0,1] and Beta[2,5]", ylab = "")
+```
+or
+```{r}
+M <- as.numeric(Maximum[2])
+A <- uniform2d(50000,M)
+B <- rejection(A)
+plot(B[1,],B[2,],xlab = "Support of U[0,1] and B[2,5]", ylab = "" )
+```
+
+The points appear to be uniformly distributed under a curve that corresponds to the pdf of the Beta(2,5) distribution
+
+(c) Plot the x-values of the points generated in 4(b) in the form of a histogram.
+What do you notice?
+```{r}
+hist(A[1,], breaks = 100, freq = FALSE, xlab="x", col='purple')
+```
+The frequencies correspond to the pdf of the Beta(2,5) distribution

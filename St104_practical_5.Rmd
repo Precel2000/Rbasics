@@ -1,0 +1,395 @@
+---
+title: "STATISTICAL LABORATORY"
+subtitle: "Practical 5"
+author: "Dodzia"
+output: html_notebook
+---
+
+**Poisson Arrival Process**
+
+a)
+```{r}
+v <- rexp(1000,1)
+```
+This generates 100 pseudorandom numbers with the exponential distribtion with rate parameter 1
+
+```{r}
+vcum <- cumsum(v)
+```
+this calculates the cumulative sum of the generated numbers stored in v
+
+```{r}
+count <- length(which(vcum <= 10))
+head(vcum, 25)
+which(vcum <= 10)
+length(which(vcum <= 10))
+```
+`which(vcum <= 5)` tells us the indexes of vcum that are less than 10
+`length(which(vcum <= 5))` tells us the length of the list of indexed (ie how many indexes)
+`count <-` ... assignes this value to an interval. the value of `count` can be understood as the number of events that occur before time t = 10
+
+b)
+
+(i) Adjust the code so that count returns the number of events that occur
+before time t = 0.0001. What result do you expect to get for count in this
+case? Briefly justify your answer. Run the code a few times to verify your
+answer.
+```{r}
+count <- length(which(vcum <= 0.0001))
+```
+I expect to get `0` as our rate parameter is 1 (ie we expect the first event to happen around time 1).
+
+(ii) Assume that we want to count the number of events before time t = 1000
+and we use the following code:
+```{r}
+v <- rexp(100,1)
+vcum <- cumsum(v)
+max(vcum)
+count <- length(which(vcum <= 1000))
+count
+```
+It selects all events from v as all happened before time 1000 (we expect the last one to happen around t=100). Instead lets generate `1500` of the iterations as shown below
+```{r}
+v <- rexp(1500,1)
+vcum <- cumsum(v)
+max(vcum)
+count <- length(which(vcum <= 1000))
+count
+```
+We can see that from 1500 iterations, 1047 happened before time `t=1000`
+
+(c) 
+Write a function countevents() that, given a vector v of inter-event times
+and a specific time t, returns the number of events that occur before time t.
+Note that you need to pay attention to the case where the total of the interevent times may be shorter than the interval. Make sure that your code returns
+a warning message when such case occurs. Also, test your function on three
+numerical examples; (v1, t1) = ((1, 4, 2, 5, 3), 10), (v2, t2) = ((1, 2, 1), 10) and
+(v3, t3) = ((15, 6, 4, 1), 10), and include the output for these examples in your
+report.
+```{r}
+countevents <- function(vector,t) {
+  a <- vector[1:length(vector)-1]
+  acum <- cumsum(a)
+  count <- length(which(acum <= t))
+  
+  if (max(acum) < t) {
+    stop("Caution: the total of the interevent times is shorter than the interval")
+  }
+  
+  return(count)
+}
+temp1 <- c(1, 4, 2, 5, 3)
+temp2 <- c(1, 2, 1)
+temp3 <- c(15, 6, 4, 1)
+print("temp1")
+countevents(temp1,10)
+print("temp3")
+countevents(temp3,10)
+print("temp2")
+countevents(temp2,10)
+```
+
+(d) For this part, you are asked to simulate a Poisson arrival process by using the
+waiting time description given above. This involves simulating inter-event times
+using rexp() and using countevents() to determine the number of counts.
+To do this, write a function poissonsimulation() which calculates the number
+of arrivals until time t in n such trials. The input parameters should be the
+exponential parameter λ, the time t, and the number of trials n. The function
+should return a vector of length n, where the i
+th element of this vector should
+correspond to the number of events before time t for the i
+th trial. 
+For this section, you may assume 0.1 ≤ λ ≤ 1, and 0 < t ≤ 1, otherwise the number
+of inter-event times you need to calculate will get too high. Even with this
+limitation though you will have to think carefully about how many inter-event
+times you need to calculate. 
+
+```{r}
+poissonsimulation <- function(n, lambda, t) {
+  m <- 1000
+  # create empty vector
+  result <- c()
+  
+  # creates m variables with param λ n times
+  for (i in 1:n) {
+  v <- rexp(m,lambda)
+  vcum <- cumsum(v)
+  count <- length(which(vcum <= t))
+  
+  # displays error message if we are selecting all generated values
+  if (max(vcum) <= count) {
+    print("Caution: the total of the interevent times is shorter than 
+          the  interval")
+  }
+  
+  result <- c(result, count)
+  }
+  # returns result
+  return(result)
+}
+
+#code from answersheet
+poissonsimulation1 <-function(lambda,t,n){
+m <- ceiling(100*t)
+v <- matrix(0, nrow = m,ncol = n)
+counts <- 0
+for (i in 1:n){
+v[,i] <- rexp(m,lambda)
+counts[i] <- countevents(v[,i], t)
+}
+return(counts)
+}
+
+poissonsimulation(10, 0.39, 0.83)
+poissonsimulation1(0.39, 0.83, 10)
+
+```
+
+Once complete, poissonsimulation() should return a vector with n elements,
+each of which is a count. Run your function for λ = 0.5, t = 1 and n = 50000
+to get a sample of n = 50000 counts and find the proportion of each count value
+in your sample. How do these proportions compare with the probability mass
+function of a Poisson(0.5) distribution?
+```{r}
+po_sim <- poissonsimulation(n=50000, lambda=0.5, t=1)
+```
+
+(f) Explore the distribution of the process you have generated with your simulation
+function. Since all the values are discrete, bar plots are better than histograms.
+Note you may not only invoke barplot() but also apply table() to the result
+
+```{r}
+po_sim_table <- table(po_sim)/50000
+po_sim_table
+dpois(0:5,lambda = 0.5)
+barplot(po_sim_table)
+```
+The results are aprox equal to the true values of possson distribution
+
+
+```{r}
+po_sim1 <- poissonsimulation(500, 0.1, 0.1)
+po_sim_table1 <- table(po_sim1)/500
+barplot(po_sim_table, col = 'purple')
+```
+```{r}
+po_sim1 <- poissonsimulation(50000, 0.1, 0.1)
+po_sim_table1 <- table(po_sim1)/50000
+barplot(po_sim_table, col = 'purple')
+```
+
+```{r}
+po_sim1 <- poissonsimulation(50000, 0.1, 0.5)
+po_sim_table1 <- table(po_sim1)/50000
+barplot(po_sim_table, col = 'purple')
+```
+
+```{r}
+po_sim1 <- poissonsimulation(50000, 1, 0.5)
+po_sim_table1 <- table(po_sim1)
+barplot(po_sim_table, col = 'purple')
+```
+The graphs look near identical, but the plotting times differ (the one with n=500 is significantly faster)
+
+2. **Poisson Scatter**
+In this exercise we study randomly scattered points on a unit square. This spatial
+example is inspired by real world phenomena such as positions of stars on a photographic plate, defects on a sheet of metal, positions of cells on a microscope slide or
+raindrops hitting your head.
+In many situation it is acceptable to make a few simplifying assumptions: there are
+no points occurring more than once, the intensity of points is homogeneous across the
+entire square, and that whatever happens in one area does not affect what happens
+elsewhere. This leads to a model called Poisson scatter with intensity λ (for some
+positive constant λ):
+
+(i) The number N(B) of points in a subset B of the unit square is a Poisson random
+variable with mean λ × area(B).
+
+(ii) For disjoint subsets B1, . . . , Bj
+, the numbers of points N(B1), . . . , N(Bj ), are
+mutually independent.
+
+We now turn our attention to the computational implementation and exploration of
+the random scatters described by this model.
+
+(a) Generate 100 independent uniformly distributed points on a unit square and
+visualise this in a plot using plot(). You may use the build-in R function
+runif() that generates uniformly distributed points on an interval. Repeat this
+a few times to get an idea of what such patterns look like.
+```{r}
+x <- runif(100)
+y <- runif(100)
+plot(x,y, col='purple', main ="100 (random) points on a unit square", pch=21, cex=0.5)
+```
+
+(b) Write a function runifrect() that generates n independent uniformly distributed points on a rectangle [x1, x2] × [y1, y2] within the unity square, that
+is, with 0 ≤ x1 < x2 ≤ 1 and 0 ≤ y1 < y2 ≤ 1. The input arguments of this
+function should be n and the coordinates of the rectangle. The function should
+return a matrix of dimensions n × 2. You may build in checks that activate
+warnings to users who plug in coordinates that create non-admissible or degenerated rectangles; ideally by writing a separate function so that this can be used
+routinely in the functions you will use in the other parts of this exercise.
+```{r}
+valid <- function(n, x1, x2, y1, y2) {
+  
+  if (x2<=x1) {
+    print("x2 must be larger than x1")
+    return(FALSE)
+  }
+  if (y2 <= y1) {
+    print("y2 must be larger than y1")
+    return(FALSE)
+  }
+  
+  if (x2>1 | x1<0) {
+    print("x-coordinate out of range")
+    return(FALSE)
+  }
+  
+  if (y2>1 | y1<0) {
+    print("y-coordinate out of range")
+    return(FALSE)
+  }
+  
+  return(TRUE)
+}
+runifrect <- function(n, x1, x2, y1, y2) {
+  x_co <- character(0)
+  y_co <- character(0)
+  if (valid(n, x1, x2, y1, y2)) {
+  x_co <- runif(n, x1, x2)
+  y_co <- runif(n, y1, y2)
+  
+  }
+  matrix <- rbind(x_co,y_co)
+  print(matrix)
+  return(matrix) 
+  
+}
+a <- runifrect(25,0.18, 0.68,0.3,0.58)
+
+```
+
+Write a function plotrectpoints() that visualises your result within the unit
+square by tracing the rectangle in red dotted lines and plotting the simulated
+points in black. The input arguments of this function should be the coordinates
+of the rectangle and a matrix containing the points as its rows. You may find
+the function rect() useful; note the arguments border and lty.
+```{r}
+plotrectpoints <- function(matrix, x1, x2, y1, y2){
+  plot(c(),c(), xlim=c(0,1), ylim=c(0,1), xlab = "X", ylab = "Y")
+  if (valid(1, x1, x2, y1, y2)) {
+    
+    rect(x1, y1, x2, y2, border = 2, lty = "dotted", bg="red")
+    print(matrix)
+    x_coor <- matrix['x_co',]
+    y_coor <- matrix['y_co',]
+    points(x_coor, y_coor, cex=0.5, pch = 21, bg = "black")
+    points(matrix, cex=1.5, pch = 16)
+  }
+}
+
+plotrectpoints(a, 0,1,0,1)
+
+```
+```{r}
+plotrectpoints <- function(M, x1, x2, y1, y2){
+plot(c(),c(), xlim=c(0,1), ylim=c(0,1), xlab="X", ylab="Y") #empty plot
+rect(x1,y1,x2,y2,border=2,lty=3)
+points(M, pch=16)
+}
+plotrectpoints(a, 0,1,0,1)
+```
+
+(d) Write a function poissonrect() that generates the realisations of a Poisson
+random scatter with positive intensity parameter λ for rectangles. 
+
+The input arguments of this function should be the coordinates of the rectangle and λ. The output value of this function should be a matrix that you can plug into
+plotrectpoints(). 
+
+Enjoy your hard work by exploring what such random
+pattern looks like. Vary the rectangle sizes and locations and run through a range
+of λ. For example, create the corresponding plots for the following combinations:
+
+λ x1 x2 y1 y2
+100 0.1 0.5 0.3 0.8
+100 0 0.5 0.3 0.4
+1000 0 0.5 0.3 0.4
+1000 0 0.5 0.3 1
+
+Note that λ corresponds to the expected number of points for the whole unit
+square, so you need to expect smaller numbers of points for smaller rectangles,
+and for small λ you can easily end up with no points at all.
+
+```{r}
+#come back to this me ne comprande pa
+poissonrect <- function(lambda, x1, x2, y1, y2) {
+    if (valid(lambda, x1, x2, y1, y2)==FALSE) {
+      return(FALSE)
+    }
+   
+    x <- rexp(lambda, 0.1)
+    xcum <- cumsum(x)
+    y <- rexp(lambda, 0.1)
+    ycum <- cumsum(y)
+    
+    matrix <- rbind(xcum,ycum)
+    print(matrix)
+    return(matrix)
+  
+}
+poissonrect(10, 0.18, 0.68,0.3,0.58)
+```
+
+```{r}
+#MAKE SURE YOU GET IT
+poissonrect <- function(lambda, x1, x2, y1, y2){
+if (lambda<=0) stop("Poisson intensity parameter needs to be positive")
+if(valid(1,x1,x2,y1,y2)){
+  
+area <- (x2-x1)*(y2-y1) #can’t be 0 or neg
+N <- rpois(1,lambda*area)
+M <- matrix(nrow=N, ncol=2)
+  #note: number of rows is the random number defined above
+M[,1] <- runif(N, min=x1, max=x2)
+M[,2] <- runif(N, min=y1, max=y2)
+return(M)
+}
+}
+```
+
+
+
+
+
+
+
+
+
+RANDOM LECTURE STUFF
+```{r}
+bs <- rbinom(1000,1, 0.1)
+hist(bs)
+length(which(bs==1))
+length(which(bs==0))
+```
+```{r}
+us <- runif(1000,0,1)
+bs2 <- rep(0,1000)
+bs2[which(us<0.1)] <- 1
+hist(bs2)
+```
+
+THE GAMMA DIST
+```{r}
+invcdf <- function(x, lambda) {
+  a <- -(1/lambda)*log(1-x)
+  return(a)
+}
+```
+
+
+
+
+```{r}
+Sys.setenv(LANG = "en")
+```
+
