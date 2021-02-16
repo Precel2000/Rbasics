@@ -1,6 +1,5 @@
 ---
-title: "Anemia treatment study"
-author: Dodzia
+title: "ST104 catchup lab 9"
 output: html_notebook
 ---
 
@@ -48,9 +47,10 @@ cell count on n female patients.
 ```{r}
 rbccF <- function(n){
   #1st measurement
-  m_1 <- rnorm(n, 133, 5)+ rnorm(n,0,2)
+  truecount <- rnorm(n, 133, 5)
+  m_1 <- truecount + rnorm(n,0,2)
   #2nd measurement
-  m_2 <- rnorm(n, 133, 5)+ rnorm(n,0,2)
+  m_2 <- truecount + rnorm(n,0,2)
   m <-cbind(m_1, m_2)
   return(m)
 }
@@ -60,8 +60,9 @@ number n and outputs an array with n rows and 2 columns, representing the
 simulated measurements of red blood cell count on n male patients. 
 ```{r}
 rbccM <- function(n){
-  m_1 <- rnorm(n, 150, 6)+ rnorm(n,0,2)
-  m_2 <- rnorm(n, 150, 6)+ rnorm(n,0,2)
+  truecount <- rnorm(n, 150, 6)
+  m_1 <- truecount + rnorm(n,0,2)
+  m_2 <- truecount + rnorm(n,0,2)
   m <-cbind(m_1, m_2)
   return(m)
 }
@@ -157,16 +158,16 @@ It would be off by about 33% COME BACK TO THIS
 5. Use the lm() function to compute the regression line for predicting second
 measurements from first measurements, based on the complete set of measurements B.
 ```{r}
-lm(B[,1]~B[,2])
-lm(B1[,1]~B1[,2])
+Bln <- lm(B[,1]~B[,2])
+B1ln <- lm(B1[,1]~B1[,2])
 ```
 Put the line into the scatterplot. Repeat this for just the subjects included in the study, B1, plotting the new line in red. 
 ```{r}
 plot(B[1:1000,1], B[1:1000,2], xlab="first measurement", ylab="second measurement", col="purple", xlim=c(min(B[,1]), max(B[,1])), ylim=c(min(B[,2]), max(B[,2])))
 points(B[1001:2000,1], B[1001:2000,2], col="black")
 points(B1[,1], B1[,2], col="red")
-abline(46.2743, 0.6739)
-abline(51.1323,0.4956, col="red")
+abline(Bln)
+abline(B1ln, col="red")
 ```
 Obviously, your results will depend on the simulated outputs. Draw three scatterplots and the
 regression lines for the whole and the restricted data sets as above, each time
@@ -179,11 +180,16 @@ B1_F <- B[1:1000,][B[1:1000,1]<120,]
 B1_M <- B[1001:2000,][B[1001:2000,1]<130,]
 #bind them together
 B1 <- rbind(B1_F,B1_M)
+
 plot(B[1:1000,1], B[1:1000,2], xlab="first measurement", ylab="second measurement", col="purple", xlim=c(min(B[,1]), max(B[,1])), ylim=c(min(B[,2]), max(B[,2])))
 points(B[1001:2000,1], B[1001:2000,2], col="black")
 points(B1[,1], B1[,2], col="red")
-abline(46.2743, 0.6739)
-abline(51.1323,0.4956, col="red")
+
+Bln <- lm(B[,2]~B[,1])
+B1ln <- lm(B1[,2]~B1[,1])
+
+abline(Bln)
+abline(B1ln, col="red")
 ```
 ```{r}
 B <- rbccT(1000)
@@ -193,11 +199,16 @@ B1_F <- B[1:1000,][B[1:1000,1]<120,]
 B1_M <- B[1001:2000,][B[1001:2000,1]<130,]
 #bind them together
 B1 <- rbind(B1_F,B1_M)
+
 plot(B[1:1000,1], B[1:1000,2], xlab="first measurement", ylab="second measurement", col="purple", xlim=c(min(B[,1]), max(B[,1])), ylim=c(min(B[,2]), max(B[,2])))
 points(B[1001:2000,1], B[1001:2000,2], col="black")
 points(B1[,1], B1[,2], col="red")
-abline(46.2743, 0.6739)
-abline(51.1323,0.4956, col="red")
+
+Bln <- lm(B[,2]~B[,1])
+B1ln <- lm(B1[,2]~B1[,1])
+
+abline(Bln)
+abline(B1ln, col="red")
 ```
 ```{r}
 B <- rbccT(1000)
@@ -207,11 +218,16 @@ B1_F <- B[1:1000,][B[1:1000,1]<120,]
 B1_M <- B[1001:2000,][B[1001:2000,1]<130,]
 #bind them together
 B1 <- rbind(B1_F,B1_M)
+
 plot(B[1:1000,1], B[1:1000,2], xlab="first measurement", ylab="second measurement", col="purple", xlim=c(min(B[,1]), max(B[,1])), ylim=c(min(B[,2]), max(B[,2])))
 points(B[1001:2000,1], B[1001:2000,2], col="black")
 points(B1[,1], B1[,2], col="red")
-abline(46.2743, 0.6739)
-abline(51.1323,0.4956, col="red")
+
+Bln <- lm(B[,2]~B[,1])
+B1ln <- lm(B1[,2]~B1[,1])
+
+abline(Bln)
+abline(B1ln, col="red")
 ```
 What is the mean of the differences between the first and second measurements in B? In B1? 
 ```{r}
