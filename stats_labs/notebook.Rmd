@@ -1,0 +1,101 @@
+---
+title: "ST221 practical 1"
+author: "Dodzia"
+output: html_notebook
+---
+
+Consider the coursework marks (out of 20) and exam marks (out of 100) for some MORSE students
+
+```{r}
+cw <- c(5,5,10,12,14,16)
+exam <- c(38,45,69,65,75,96)
+```
+
+Produce the first scatterplot
+```{r}
+plot(cw, exam, col = "purple", main = "cw vs exam marks", xlab = " coursework mark (out of 20)", ylab = "exam mark (out of 100)")
+```
+Fit a simple linear regression model with exam as the response and cw as the predictor
+```{r}
+m1 <- lm(exam ~ cw)
+coefficients(m1)
+residuals(m1)
+```
+A student got 4.4 exam marks for each cw mark
+
+calculate the fitted values of the model
+```{r}
+fitted(m1)
+```
+plot the line
+```{r}
+plot(cw, exam, col = "purple", main = "cw vs exam marks", xlab = " coursework mark (out of 20)", ylab = "exam mark (out of 100)")
+#plot the fitted line
+abline(m1, col = 'black')
+```
+cwp stores cw mark as if it were out of 10
+```{r}
+cwp <- cw*5
+```
+ Fit a simple linear regression model again, using cwp as predictor
+```{r}
+m2 <- lm(exam ~ cwp)
+m2
+fitted(m2)
+```
+
+```{r}
+plot(cwp, exam, col = "purple", main = "cw vs exam marks", xlab = " coursework mark (out of 100)", ylab = "exam mark (out of 100)")
+abline(m1, col = 'black')
+abline(m2, col = 'purple')
+```
+There is no difference btw the result we got from rescaling the parameters. The fitted values are identical, and so is the line. Now 1 extra point in te cw (so in reality 1/5 of a point) predicts 0.88 of an extra point in the exam
+
+calculate a prediction for the exam mark achieved by another student who scored 10 marks in the coursework. 
+```{r}
+predict(m1, newdata = list(cw = 10))
+```
+My model predicts this student would score 63% in the exam
+```{r}
+predict(m1, newdata = list(cw = 20))
+```
+The model predicts the student would score 107% on the exam, which is unreasonable as such a score is impossible.
+*why has this happened?*
+The model extrapolated, based on the data it had. The model becomes less accurate once we stray away from the range of data we input
+
+
+Our model suggests that 40 = 19.377 + 4.383 × cw. Rearranging, this gives cw = 4.74, so a
+student would need to score at least 5 marks in the coursework to have a predicted exam mark
+over 40%.
+
+**2: Haemoglobin data**
+```{r}
+haem.dat <- read.csv("Haemoglobin.csv")
+```
+
+```{r}
+haem.dat
+```
+
+```{r}
+male <- 1 * (haem.dat$gender == 'Male')
+male
+```
+α + weightiβ + e_i        ,i is female
+  
+α + weightiβ + γ + e_i    ,i is male
+
+the design matrix is:
+```{r}
+cbind(rep(1,10), "weight" = haem.dat$weight, male)
+```
+//Xn
+i=1
+(yi − α − βxi)
+2
+
+\\Xn
+i=1
+(yi − α − βxi)
+2
+
