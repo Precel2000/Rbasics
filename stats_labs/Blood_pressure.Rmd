@@ -1,0 +1,62 @@
+---
+title: "Blood pressure"
+author: "Dodzia"
+output: html_notebook
+---
+
+A study was conducted into the effectiveness of a new blood pressure treatment at different doses. Patients’ blood pressures were measured initially, before 4 weeks of treatment with the new drug. Each patient was randomly allocated one of 4 different dose levels. At the end of the treatment period, the patients’ blood pressures were remeasured and the change was recorded. 
+
+```{r}
+blood <- read.csv("./data/pc3data1.csv")
+```
+Plot two graphs showing BPchange against BPinit and against Dose. 
+
+```{r}
+par(mfrow=c(2,1))
+plot(BPchange ~ BPinit, data=blood, xlab="Initial BP (mmHg)", ylab="Change in BP (mmHg)")
+plot(BPchange ~ Dose, data=blood, xlab='Dose (µg)', ylab="Change in BP (mmHg)")
+```
+The relation appears to be linear. So we fit it
+```{r}
+lm1 <- lm(BPchange ~ BPinit + Dose, data=blood)
+summary(lm1)
+```
+The p-values are very small, advocating in favour of including Dose and BPinit in the model.
+We carry out a sequential ANOVA by calling anova() with 1 argument
+```{r}
+anova(lm1)
+```
+Produce an ANOVA table for the test for the existence of regression and calculate the p-value. How do the quantities that you computed for this ANOVA table relate to the quantities in c?
+
+The sum of squares for the ANOVA table is calculated as follows:
+TotalSS is sum of entries in column "Sum Sq"
+RegSS is the sum of the sum of squares for BPinit and Dose
+ResidSS is stated explicitly above
+```{r}
+TotalSS <- 47.214+172.313+42.248
+RegSS <- 47.214+172.313
+ResidSS <- 42.248
+```
+a more elegant way to get this is
+```{r}
+a <- anova(lm1)
+SS <- a[["Sum Sq"]] #the Sum Sq column
+TotalSS <- sum(SS) # Total sum of squares
+RegrSS <- sum(SS[1:2]) # Regression sum of squares
+ResidSS <- SS[3] # Residual sum of squares
+```
+We now get the required degrees of freedom
+```{r}
+df <- a$Df
+TotalDF <- sum(df) # Total degrees of freedom
+RegrDF <- sum(df[1:2]) # Regression degrees of freedom
+ResidDF <- df[3] # Residual degrees of freedom
+```
+We now compute the relevant mean squares and F-statistic
+
+
+
+
+
+
+
