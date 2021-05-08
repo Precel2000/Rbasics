@@ -1,0 +1,23 @@
+---
+title: "Practical 3"
+output: html_notebook
+---
+
+A study was conducted into the effectiveness of a new blood pressure treatment at different doses. Patients’ blood pressures were measured initially, before 4 weeks of treatment with the new drug. Each patient was randomly allocated one of 4 different dose levels. At the end of the treatment period, the patients’ blood pressures were remeasured and the change was recorded. 
+
+```{r}
+blood <- read.csv("./data/pc3data1.csv")
+```
+Plot two graphs showing BPchange against BPinit and against Dose. 
+
+```{r}
+par(mfrow=c(2,1))
+plot(BPchange ~ BPinit, data=blood, xlab="Initial BP (mmHg)", ylab="Change in BP (mmHg)")
+plot(BPchange ~ Dose, data=blood, xlab='Dose (µg)', ylab="Change in BP (mmHg)")
+```
+The relation appears to be linear. So we fit it
+```{r}
+lm1 <- lm(BPchange ~ BPinit + Dose, data=blood)
+summary(lm1)
+```
+The p-values are very small, advocating in favour of including Dose and BPinit in the model
